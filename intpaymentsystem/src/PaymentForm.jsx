@@ -1,52 +1,106 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useNavigate } from "react-router-dom";
+import useInactivityLogout from './useInactivityLogout';
 
 function PaymentForm() {
-    const [formData, setFormData] = useState({
+    const [payment, setPayment] = useState({
+        receiverAccount: '',
+        senderAccount: '',
         amount: '',
         currency: 'USD',
-        provider: 'SWIFT',
-        destinationAccount: '',
         swiftCode: '',
+        provider: 'SWIFT'
     });
 
     const [message, setMessage] = useState('');
 
     const handleChange = (e) => {
-        setFormData(prev => ({
+        setPayment(prev => ({
             ...prev,
             [e.target.name]: e.target.value
         }));
     };
 
+    const navigate = useNavigate();
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            const token = localStorage.getItem('jwt');
-            await axios.post('/api/payments', formData, {
-                headers: { Authorization: `Bearer ${token}` }
+            const token = localStorage.getItem('token');
+            const response = await fetch("http://localhost:8080/api/payments/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payment)
             });
-            setMessage('Payment submitted successfully.');
+
+            const data = await response.text(); // or use .json() if your backend returns JSON
+
+            if (response.ok) {
+                setMessage(data + " Redirecting in 5 Secons!");
+                setTimeout(() => {
+                    navigate("/dashboard"); // Redirect to dashboard after payment
+                }, 5000); 
+            } else {
+                setMessage("Error submitting payment.");
+            }
         } catch (error) {
-            console.error('Error submitting payment:', error);
-            setMessage('Error submitting payment.');
+            console.error("Error:", error);
+            setMessage("Error submitting payment.");
         }
     };
 
+    const handleClick = () => {
+        navigate('/login');
+    };
+
+    useInactivityLogout(300000); // 5 minutes
+
     return (
         <div className="container mt-5">
+            {message && <div className="alert alert-info mt-3">{message}</div>}
             <h2>International Payment</h2>
             <form onSubmit={handleSubmit} className="p-4 border rounded shadow-sm bg-light">
+                <div className="mb-3">
+                    <label className="form-label">Receiver Account</label>
+                    <input
+                        type="text"
+                        name="receiverAccount"
+                        className="form-control"
+                        value={payment.receiverAccount}
+                        onChange={handleChange}
+                        pattern="^\d{10,20}$"
+                        title="10 to 20 digit account number"
+                        required
+                    />
+                </div>
+
+                <div className="mb-3">
+                    <label className="form-label">Sender Account</label>
+                    <input
+                        type="text"
+                        name="senderAccount"
+                        className="form-control"
+                        value={payment.senderAccount}
+                        onChange={handleChange}
+                        pattern="^\d{10,20}$"
+                        title="10 to 20 digit account number"
+                        required
+                    />
+                </div>
+
                 <div className="mb-3">
                     <label className="form-label">Amount</label>
                     <input
                         type="text"
                         name="amount"
-                        pattern="^\d+(\.\d{1, 2})?$"
+                        pattern="^\d+(\.\d{2})?$"
                         className="form-control"
-                        value={formData.amount}
+                        value={payment.amount}
                         onChange={handleChange}
+                        title="Enter a valid amount (e.g. 1000 or 1000.50)"
                         required
                         min="1"
                     />
@@ -57,13 +111,18 @@ function PaymentForm() {
                     <select
                         name="currency"
                         className="form-select"
-                        value={formData.currency}
+                        value={payment.currency}
                         onChange={handleChange}
                     >
                         <option value="USD">USD</option>
                         <option value="ZAR">ZAR</option>
                         <option value="EUR">EUR</option>
                         <option value="GBP">GBP</option>
+                        <option value="BWP">BWP</option>
+                        <option value="NAD">NAD</option>
+                        <option value="SZL">SZL</option>
+                        <option value="MZN">MZN</option>
+                        <option value="MZN">ZWL</option>
                     </select>
                 </div>
 
@@ -72,44 +131,30 @@ function PaymentForm() {
                     <select
                         name="provider"
                         className="form-select"
-                        value={formData.provider}
+                        value={payment.provider}
                         onChange={handleChange}
                     >
                         <option value="SWIFT">SWIFT</option>
                     </select>
                 </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Destination Account</label>
-                    <input
-                        type="text"
-                        name="destinationAccount"
-                        className="form-control"
-                        value={formData.destinationAccount}
-                        onChange={handleChange}
-                        pattern="^\d{10,20}$"
-                        title="10 to 20 digit account number"
-                        required
-                    />
-                </div>
-
+                
                 <div className="mb-3">
                     <label className="form-label">SWIFT Code</label>
                     <input
                         type="text"
                         name="swiftCode"
                         className="form-control"
-                        value={formData.swiftCode}
+                        value={payment.swiftCode}
                         onChange={handleChange}
                         pattern="^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$"
-                        title="Valid SWIFT code"
+                        title="Enter Valid SWIFT code e.g. FIRNZAJJ"
                         required
                     />
                 </div>
-
-                <button type="submit" className="btn btn-primary">Pay Now</button>
-
-                {message && <div className="alert alert-info mt-3">{message}</div>}
+                <div>
+                    <button type="submit" className="btn btn-primary">Pay Now</button>
+                </div>
+                <button type="button" class="btn btn-danger mt-2" onClick={handleClick}>Cancel</button>
             </form>
         </div>
     );
