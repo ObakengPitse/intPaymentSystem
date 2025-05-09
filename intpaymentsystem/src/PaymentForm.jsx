@@ -42,7 +42,7 @@ function PaymentForm() {
                 setMessage(data + " Redirecting in 5 Secons!");
                 setTimeout(() => {
                     navigate("/dashboard"); // Redirect to dashboard after payment
-                }, 5000); 
+                }, 5000);
             } else {
                 setMessage("Error submitting payment.");
             }
@@ -137,7 +137,7 @@ function PaymentForm() {
                         <option value="SWIFT">SWIFT</option>
                     </select>
                 </div>
-                
+
                 <div className="mb-3">
                     <label className="form-label">SWIFT Code</label>
                     <input
