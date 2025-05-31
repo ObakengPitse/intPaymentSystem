@@ -4,6 +4,7 @@ import useInactivityLogout from './useInactivityLogout';
 
 function PaymentForm() {
     const [payment, setPayment] = useState({
+        userId: localStorage.getItem('userId') || '',
         receiverAccount: '',
         senderAccount: '',
         amount: '',
@@ -76,6 +77,12 @@ function PaymentForm() {
                         required
                     />
                 </div>
+
+                <input
+                    type="hidden"
+                    name="userId"
+                    value={payment.userId}
+                />
 
                 <div className="mb-3">
                     <label className="form-label">Sender Account</label>
