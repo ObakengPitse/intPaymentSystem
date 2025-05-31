@@ -31,7 +31,7 @@ const RegistrationForm = () => {
         e.preventDefault();
         try {
 
-            const response = await fetch("http://localhost:8080/auth/register", {
+            const response = await fetch("https://paymentsystem-4svt.onrender.com/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(user),
